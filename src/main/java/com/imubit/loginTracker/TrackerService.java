@@ -13,7 +13,7 @@ public class TrackerService {
         return userRepository.findAll();
     }
 
-    public void userLoggedIn(String user){
-        userRepository.save(new User(user));
+    public void userLoggedIn(User user){
+        userRepository.save(user);
     }
 }

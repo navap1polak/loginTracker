@@ -28,7 +28,7 @@ public class TrackerController {
     @RequestMapping(method= RequestMethod.POST,
             value="/login",
             produces = APPLICATION_JSON_VALUE)
-    public void usersLogin(String user) {
+    public void usersLogin(@RequestBody User user) {
         trackerService.userLoggedIn(user);
     }
 
