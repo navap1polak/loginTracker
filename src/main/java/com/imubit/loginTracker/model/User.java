@@ -1,11 +1,12 @@
-package com.imubit.loginTracker;
+package com.imubit.loginTracker.model;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
-@Entity(name = "users")
+@Entity
+@Table(name = "users")
 //@Data
 //@NoArgsConstructor
 public class User {

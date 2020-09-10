@@ -8,4 +8,17 @@ CREATE TABLE users (
 
 INSERT INTO users (name) VALUES
   ('Aliko'),
+  ('Aliko'),
+  ('Aliko'),
+  ('Aliko'),
+  ('Aliko'),
+  ('Aliko'),
+  ('Aliko'),
+  ('Aliko'),('Aliko'),('Aliko'),('Aliko'),('Aliko'),('Aliko'),
+
+
+
+
+
+
   ('Bill');
