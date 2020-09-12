@@ -1,23 +1,11 @@
-package com.imubit.loginTracker.fileWatcher;
+package com.imubit.loginTracker.login;
 
 import com.imubit.loginTracker.exceptions.FatalInitException;
-import com.imubit.loginTracker.model.FileEvent;
-import com.imubit.loginTracker.model.FileListener;
-import com.imubit.loginTracker.service.LoginService;
-import lombok.extern.log4j.Log4j;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,20 +27,13 @@ import java.util.regex.Pattern;
  * navap    :0           2020-09-08 08:17 (:0)
  *
  */
-@Component
 @Slf4j
-public class LinuxLoginListenerService {
-
-    @Value("${kafka.input.topic}")
-    private String kafkaInputTopic;
-
-    @Autowired
-    private KafkaTemplate<String, String> kafkaTemplate;
+public class LinuxLoginListenerService{
 
     /**
      * place holder for the line to look for
      */
-    private static  String LAST_LINE_MARKER = "$$$";
+    private static final  String LAST_LINE_MARKER = "$$$";
     /**
      * Command to get all login users
      */
@@ -83,17 +64,16 @@ public class LinuxLoginListenerService {
     /**
      * The path to wtmp file
      */
-    private static final String LOGIN_FILE = "/var/log/wtmp";
+    public static final String LOGIN_FILE = "/var/log/wtmp";
     /**
      * The folder of wtmp file
      */
-    private static final String LOGIN_FILE_FOLDER = "/var/log";
+    public static final String LOGIN_FILE_FOLDER = "/var/log";
 
 
     private static final String LOG_MESSAGE_REG = "(^\\S+)\\s.*";
 
-    private Pattern logMessagePattern = Pattern.compile(LOG_MESSAGE_REG);
-
+    private static final Pattern logMessagePattern = Pattern.compile(LOG_MESSAGE_REG);
 
 
     /**
@@ -108,15 +88,13 @@ public class LinuxLoginListenerService {
      */
     private int numIdenticalUserRecord = 1;
 
-    private boolean duringGetLoginUsers;
-
     /**
      * Get the last login  in wtmp. This will be the basic for starting monitoring login users
      * Each time the wtmp change, we will get users since last recorded login user
      * the time resolution in wtmp files is "HH:mm", so there might be some identical rows
      *  since there might be that user logged in multiple time at the same time resolution
      */
-    public void getWtmpFirstStatus(){
+    public void createWtmpFirstStatus(){
         String s;
         Process p;
         try {
@@ -150,11 +128,10 @@ public class LinuxLoginListenerService {
         if (lastLine != null) {
             command = LAST_LOGIN_COMMAND.replace(LAST_LINE_MARKER, lastLine).replace(NUMBER_OF_ROWS_MARKER, String.valueOf(numIdenticalUserRecord));
         }
-        String[] commandArr = {"/bin/sh","-c",command};
-
-        return commandArr;
+        return new String[] {"/bin/sh","-c",command};
     }
-    private List<String> getLastLoggedUsers(){
+
+    public ArrayList<String>  checkForLastLoggedUsers(){
         String[] command = constructLastUsersCommand();
         ArrayList<String> loggedUserList = new ArrayList<>();
         String s;
@@ -181,8 +158,9 @@ public class LinuxLoginListenerService {
                         boolean hasMatch = matcher.matches();
                         if(!hasMatch)
                             log.error("Unable to parse the following log messafge:\n" + lastLine + "\nThis line is ignored");
-                        else
-                            kafkaTemplate.send(kafkaInputTopic, matcher.group(1));
+                        else {
+                            loggedUserList.add( matcher.group(1));
+                        }
                     }catch(IllegalStateException e){
                         log.error("Unable to parse the following log messafge:\n" + lastLine + "\nThis line is ignored");
                     }
@@ -196,26 +174,6 @@ public class LinuxLoginListenerService {
             throw new FatalInitException("Failed to init the system" ,e);
         }
         return loggedUserList;
-
-    }
-
-    @PostConstruct
-    public void init(){
-        //get users logging base status
-        getWtmpFirstStatus();
-
-        FileWatcher watcher = new FileWatcher(new File(LOGIN_FILE_FOLDER));
-
-        watcher.addListener(new FileListener() {
-
-            public void onModified(FileEvent event) {
-                if(event.getFile().getAbsolutePath().equals(LOGIN_FILE)) {
-                    duringGetLoginUsers = true;
-                    List<String> loggedUsers = getLastLoggedUsers();
-                    duringGetLoginUsers = false;
-                }
-            }
-        }).watch();
 
     }
 }

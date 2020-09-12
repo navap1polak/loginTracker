@@ -1,4 +1,4 @@
-package com.imubit.loginTracker.fileWatcher;
+package com.imubit.loginTracker.kafka;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -15,7 +15,7 @@ public class KafkaMessageSender {
 
     }
 
-    void sendMessage(String message, String topicName) {
+    public void sendMessage(String topicName,String message ) {
         kafkaTemplate.send(topicName, message);
     }
 }

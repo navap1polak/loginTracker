@@ -3,7 +3,6 @@ import { Title } from '@angular/platform-browser';
 
 import * as Stomp from 'stompjs';
 import * as SockJS from 'sockjs-client';
-import $ from 'jquery';
 
 @Component({
   selector: 'app-root',

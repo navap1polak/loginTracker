@@ -6,6 +6,8 @@ RUN npm install && mkdir /app-login && mv ./node_modules ./app-login
 
 WORKDIR /app-login
 
+ENV PATH="./node_modules/.bin:$PATH"
+
 COPY . .
 
 RUN npm run ng build -- --deploy-url=/last-logins/ --prod
