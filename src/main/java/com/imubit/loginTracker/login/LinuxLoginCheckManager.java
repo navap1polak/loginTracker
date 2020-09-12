@@ -1,11 +1,9 @@
 package com.imubit.loginTracker.login;
 
 import com.imubit.loginTracker.fileWatcher.FileWatcher;
-import com.imubit.loginTracker.kafka.KafkaMessageSender;
 import com.imubit.loginTracker.model.FileEvent;
 import com.imubit.loginTracker.model.FileListener;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -17,8 +15,6 @@ import java.util.concurrent.Executors;
 @Slf4j
 @Component
 public class LinuxLoginCheckManager extends AbstractLoginListener{
-    @Autowired
-    private KafkaMessageSender kafkaMessageSender;
 
     private LinuxLoginListenerService linuxLoginListenerService = new LinuxLoginListenerService();
 
@@ -75,7 +71,7 @@ public class LinuxLoginCheckManager extends AbstractLoginListener{
                             lock.wait();
                         }
                         List<String> loginUsers = linuxLoginListenerService.checkForLastLoggedUsers();
-                        loginUsers.forEach(s -> sendMessage(s));
+                        notifyOnNewUsers(loginUsers);
                     }
                 } catch (InterruptedException e) {
 

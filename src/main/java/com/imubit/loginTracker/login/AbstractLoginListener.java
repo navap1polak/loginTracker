@@ -1,23 +1,24 @@
 package com.imubit.loginTracker.login;
 
-import com.imubit.loginTracker.kafka.KafkaMessageSender;
+import com.imubit.loginTracker.controller.TrackerController;
+import com.imubit.loginTracker.service.TrackerService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+
+import java.util.List;
 
 /**
  * Abstract class for getting new logged users from operating system.
  * Need to extend for each operating system
  */
 public abstract class AbstractLoginListener {
-    @Autowired
-    private KafkaMessageSender kafkaMessageSender;
 
-    @Value("${kafka.input.topic}")
-    private String kafkaInputTopic;
+    @Autowired
+    private TrackerService trackerService;
 
     public abstract void init();
 
-    protected void sendMessage(String message){
-        kafkaMessageSender.sendMessage(kafkaInputTopic, message);
+    protected void notifyOnNewUsers(List<String> loginUsers){
+        trackerService.newLoginUsers(loginUsers);
+
     }
 }

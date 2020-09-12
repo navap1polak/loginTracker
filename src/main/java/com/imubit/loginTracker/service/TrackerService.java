@@ -6,14 +6,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class TrackerService {
+
+    @Autowired
+    private SimpMessagingTemplate webSocketSender;
 
     @Autowired
     private UserRepository userRepository;
@@ -26,19 +29,20 @@ public class TrackerService {
 
     }
 
-
-    private List<String> newLogins;
+    public List<String> getAllUsers(){
+        return userRepository.findAll().stream().map(u->u.getName()).collect(Collectors.toList());
+    }
 
     public void userLoggedIn(String user){
         userRepository.save(new User(user));
     }
 
-    public List<String> getRecentLogins(){
-        if(newLogins != null &!newLogins.isEmpty()){
-            List<String> ret  = new ArrayList<String>(newLogins);
-            newLogins.clear();
-            return ret;
+    public void newLoginUsers(List<String> loginUsers){
+        if(loginUsers != null && !loginUsers.isEmpty()) {
+            loginUsers.forEach(u->webSocketSender.convertAndSend("/topic/logins", u));
+            userRepository.saveAll(loginUsers.stream().map(s -> new User(s)).collect(Collectors.toList()));
         }
-        return new ArrayList<>();
+
     }
+
 }

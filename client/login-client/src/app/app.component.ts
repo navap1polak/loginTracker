@@ -1,5 +1,6 @@
 import { OnInit, Component } from '@angular/core';
-import { Title } from '@angular/platform-browser';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
 import * as Stomp from 'stompjs';
 import * as SockJS from 'sockjs-client';
@@ -10,20 +11,33 @@ import * as SockJS from 'sockjs-client';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
-  url = 'http://localhost:8081/websocket'
+  baseUrl = 'http://localhost:8081';
+  webSocketUrl = this.baseUrl + '/websocket';
+  getUsersUrl = this.baseUrl + '/api/allUsers';
   client: any;
   users: Array<string> = [];
 
+
+
   ngOnInit() {
-    this.title.setTitle('Angular Spring Websocket');
+    this.http.get<string[]>(this.getUsersUrl).subscribe(
+      response => {
+        if (response != null && response.length > 0) {
+          for (var i = 0; i < response.length; i++)
+            this.users.push(response[i]);
+        }
+     },
+        error => {
+        console.log(error);
+      });
   }
 
-  constructor(private title: Title){
+  constructor(private http: HttpClient){
     this.connection();
   }
 
   connection(){
-    let ws = new SockJS(this.url);
+    let ws = new SockJS(this.webSocketUrl);
     this.client = Stomp.over(ws);
     let that = this;
 
